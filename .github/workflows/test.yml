@@ -52,14 +52,15 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
       - uses: msys2/setup-msys2@v2
+        id: msys2
         if: runner.os == 'Windows'
         with:
-          msystem: MINGW64
-          install: mingw-w64-x86_64-gcc
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-gcc
       - name: Windows race compiler
         if: runner.os == 'Windows'
         shell: pwsh
-        run: '"C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
+        run: '"${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
       - run: go vet ./...
       - run: go test ./... -count=1 -timeout=120s
       - run: go test -race ./... -count=1 -timeout=180s
