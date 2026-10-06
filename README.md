@@ -59,7 +59,8 @@ mise run check
 ```
 
 Additional tasks: `build`, `test`, `test:race` (requires a C compiler), `coverage`,
-`lint`, and `tidy`.
+`lint`, `tidy`, and `vuln` (vulnerability scanning; needs network access for the
+Go vulnerability database).
 
 Install the repository-local hooks with
 `mise run hooks:install`. Pre-commit formats and lints; pre-push runs tests and

@@ -1,4 +1,4 @@
-name: Test
+name: CI
 
 on:
   push:
@@ -64,3 +64,31 @@ jobs:
       - run: go vet ./...
       - run: go test ./... -count=1 -timeout=120s
       - run: go test -race ./... -count=1 -timeout=180s
+
+  # Quality gates that add no platform-specific coverage: govulncheck performs
+  # source-level analysis, and the fuzzed parsers plus benchmarks are pure Go.
+  # Run once on Linux instead of multiplying across the OS matrix.
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+      # Pinned via the go.mod tool directive; fails the job on any reachable
+      # vulnerability. Downloads the vulnerability database at run time.
+      - name: Vulnerability scan
+        run: go tool govulncheck ./...
+      # Bounded mutation smoke on the parser targets; seed corpora already run
+      # as ordinary tests in every matrix job.
+      - name: Fuzz smoke
+        run: |
+          go test -run '^$' -fuzz '^FuzzParseDigest$' -fuzztime=10s .
+          go test -run '^$' -fuzz '^FuzzDigestUnmarshalText$' -fuzztime=10s .
+          go test -run '^$' -fuzz '^FuzzPublicationNames$' -fuzztime=10s .
+      # Compile and execute every benchmark once; hosted-runner timings are
+      # reported but never compared against thresholds.
+      - name: Benchmark smoke
+        run: go test -run '^$' -bench . -benchtime=1x -benchmem ./...

@@ -12,6 +12,7 @@
 - `mise run check` runs build, formatting checks, lint, tests, and `go mod tidy -diff` without modifying source. Its dependencies have no enforced sequence; do not run it concurrently with formatting or dependency updates.
 - Focused tests: `mise exec -- go test . -run '^TestName$' -count=1`; replace `.` with a package path for a subpackage. Task `test` always runs `./...`; use `mise exec` for Go flags rather than assuming task arguments are forwarded.
 - After dependency changes, run `mise run tidy` before lint/check: golangci-lint uses `modules-download-mode: readonly`.
+- Vulnerability scanning is `mise run vuln` (or `go tool govulncheck ./...`); govulncheck is pinned by the go.mod `tool` directive and needs network access for the vulnerability database. It is a CI quality gate, not part of `check`, to keep checks network-independent.
 - `mise run test:race` requires a C compiler and is not included in `check`.
 
 ## Hooks and commits

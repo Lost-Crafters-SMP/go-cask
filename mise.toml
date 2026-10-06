@@ -31,6 +31,10 @@ run = "golangci-lint fmt --diff ./..."
 description = "Run golangci-lint"
 run = "golangci-lint run ./..."
 
+[tasks.vuln]
+description = "Scan for reachable Go vulnerabilities (network required)"
+run = "go tool govulncheck ./..."
+
 [tasks.tidy]
 description = "Tidy module dependencies"
 run = "go mod tidy"
