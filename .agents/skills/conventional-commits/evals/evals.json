@@ -1,0 +1,148 @@
+{
+  "skill_name": "conventional-commits",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mixed-working-tree-split",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit my changes for me \u2014 split them up however makes sense.",
+      "expected_output": "Multiple logical commits: feat including its tests, docs for README typo, dependency bump typed build(deps) or chore(deps) (repo convention first); all headers follow Conventional Commits; no redundant diff-narrating bodies.",
+      "files": [],
+      "expectations": [
+        "At least 3 new commits were created (one per logical change)",
+        "A feat commit contains both main.py and test_main.py (feature with its test)",
+        "The README typo fix is its own docs-type commit, separate from the feature",
+        "The dependency bump is its own commit typed build or chore",
+        "Dependency commit carries the deps scope (owner default chore(deps); repo history establishes no other pattern)",
+        "Every new commit subject matches Conventional Commits header format",
+        "Working tree is clean after the run (no untracked artifacts)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "breaking-api-change",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this.",
+      "expected_output": "One commit with breaking-change signaling: `!` in header and a BREAKING CHANGE footer; type feat (or fix), not chore/docs.",
+      "files": [],
+      "expectations": [
+        "Exactly one new commit was created containing both cli.py and README.md",
+        "The header flags the breaking change with '!' before the colon",
+        "The message contains a BREAKING CHANGE: footer",
+        "The commit type is feat (not chore/docs/style)",
+        "The breaking-change note explains the removal (output-format/text output)",
+        "Working tree is clean after the run (no untracked artifacts)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "repo-scope-conventions",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this for me.",
+      "expected_output": "Commit follows the repo's CONTRIBUTING.md rules and history conventions: fix(lexer) with subject <= 65 chars, fix and its test together.",
+      "files": [],
+      "expectations": [
+        "One new commit contains lexer.py and test_lexer.py together (skill policy: code and its test in one commit)",
+        "The commit uses type fix",
+        "The commit uses scope lexer (matching the repo's vocabulary)",
+        "The subject line is at most 65 characters (per CONTRIBUTING.md)",
+        "The subject references no issue number (issues go in the body)",
+        "Working tree is clean after the run (no untracked artifacts)"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "message-only-no-commit",
+      "prompt": "In the git repository at <fixture>, don't commit anything yet \u2014 what commit message would you use for the staged changes? Just tell me.",
+      "expected_output": "A suggested Conventional Commits message (feat scope appropriate); no commit created; staged changes left staged.",
+      "files": [],
+      "expectations": [
+        "A suggested commit message was provided",
+        "The suggested header follows Conventional Commits with type feat",
+        "No commit was created (history unchanged at 3 commits)",
+        "Staged changes remain staged and uncommitted"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "review-nonconforming-message",
+      "prompt": "Does this commit message follow Conventional Commits? Point out the problems and show me a corrected version.\n\n---\nFixed the login bug\n\nI changed some things in auth.py to fix issue #123. The bug was that sessions\nexpired immediately. Acked by: Dave\nBREAKING: session cookie format changed\n---",
+      "expected_output": "Identifies spec violations (missing type, BREAKING: token, Acked by spacing) vs style conventions (imperative, lowercase, issue footer); corrected message uses fix! WITHOUT inferring an (auth) scope from the file name.",
+      "files": [],
+      "expectations": [
+        "Identifies the missing type prefix in the header",
+        "Identifies that 'Acked by' must be hyphenated as 'Acked-by'",
+        "Identifies 'BREAKING:' as invalid and corrects to BREAKING CHANGE: footer or '!'",
+        "Provides a corrected version of the full message",
+        "Corrected message omits the scope (or explicitly flags it as inferred without repo evidence)",
+        "Separates spec violations from style conventions (tiers labeled, preferences not presented as spec rules)",
+        "Notes the issue reference belongs in a footer (e.g. Fixes/Closes/Refs)"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "sloppy-history-defaults",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this.",
+      "expected_output": "Despite a history of 'update stuff'/'wip'/'asdf' commits, the new commit follows Conventional Commits defaults: fix type, imperative description.",
+      "files": [],
+      "expectations": [
+        "One new commit contains tasks.py and test_tasks.py together",
+        "Despite the sloppy history, the new subject follows Conventional Commits format",
+        "The commit uses type fix",
+        "The description is imperative, not past tense",
+        "Working tree is clean after the run (no untracked artifacts)"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "style-trap-visual-fix",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this for me.",
+      "expected_output": "The CSS-only change is a user-visible dark-mode bug fix: type fix (or feat), NOT type style, despite the .css file and a baiting style: commit in history.",
+      "files": [],
+      "expectations": [
+        "One new commit contains only styles.css",
+        "Type is NOT 'style' (code-style type) for this user-visible visual bug fix",
+        "The commit uses type fix (or feat)",
+        "Subject follows Conventional Commits header format"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "ci-matrix-type",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this.",
+      "expected_output": "The GitHub Actions matrix change is typed ci, not chore or build.",
+      "files": [],
+      "expectations": [
+        "One new commit contains only .github/workflows/ci.yml",
+        "The commit uses type ci (per the Angular-lineage definition of CI config changes)",
+        "Subject follows Conventional Commits header format",
+        "No commit body for this trivial one-line matrix change (header says it all)"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "breaking-fix-signaling",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this.",
+      "expected_output": "Error-handling fix that changes observable API behavior: fix! header and/or BREAKING CHANGE footer mentioning the None->ValueError change; type fix.",
+      "files": [],
+      "expectations": [
+        "One new commit contains duration.py and test_duration.py together",
+        "The header flags breaking change with '!' on a fix type",
+        "The message contains a BREAKING CHANGE: footer",
+        "The footer explains the None -> ValueError behavior change",
+        "Subject follows Conventional Commits header format",
+        "Working tree is clean after the run (no untracked artifacts)"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "noisy-history-bots",
+      "prompt": "The git repository at <fixture> has uncommitted changes. Commit this.",
+      "expected_output": "Scoped conventional history mixed with merge commits and bot dep commits: fix(ui) matching the established scope vocabulary; merges and bots do not distort the signal.",
+      "files": [],
+      "expectations": [
+        "One new commit contains ui.py and test_ui.py together",
+        "Subject follows Conventional Commits header format despite merge/bot noise in history",
+        "Uses scope ui, matching the established vocabulary visible through the noise",
+        "Working tree is clean after the run (no untracked artifacts)"
+      ]
+    }
+  ]
+}

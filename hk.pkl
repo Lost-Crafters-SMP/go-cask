@@ -1,0 +1,39 @@
+amends "package://github.com/jdx/hk/releases/download/v2.5.0/hk@2.5.0#/Config.pkl"
+
+min_hk_version = "2.5.0"
+
+steps {
+  ["format"] {
+    glob = "**/*.go"
+    check_diff = new Command {
+      argv = List("mise", "exec", "--", "golangci-lint", "fmt", "--diff", "{{files}}")
+    }
+    fix = new Command {
+      argv = List("mise", "exec", "--", "golangci-lint", "fmt", "{{files}}")
+    }
+  }
+  ["lint"] {
+    glob = List("**/*.go", "go.mod", "go.sum", ".golangci.yml")
+    depends = "format"
+    check = new Command {
+      argv = List("mise", "run", "lint")
+    }
+  }
+}
+
+hooks {
+  ["pre-push"] {
+    steps {
+      ["test"] {
+        check = new Command {
+          argv = List("mise", "run", "test")
+        }
+      }
+      ["tidy"] {
+        check = new Command {
+          argv = List("mise", "run", "tidy:check")
+        }
+      }
+    }
+  }
+}

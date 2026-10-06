@@ -1,0 +1,48 @@
+[tools]
+go = "1.27.1"
+golangci-lint = "2.14.0"
+hk = "2.5.0"
+
+[tasks.build]
+description = "Build all library packages"
+run = "go build ./..."
+
+[tasks.test]
+description = "Run all tests"
+run = "go test ./..."
+
+[tasks."test:race"]
+description = "Run tests with the race detector (requires a C compiler)"
+run = "go test -race ./..."
+
+[tasks.coverage]
+description = "Run tests and write coverage.out"
+run = "go test -coverprofile=coverage.out ./..."
+
+[tasks.fmt]
+description = "Format Go source and imports"
+run = "golangci-lint fmt ./..."
+
+[tasks."fmt:check"]
+description = "Check Go formatting without modifying files"
+run = "golangci-lint fmt --diff ./..."
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = "golangci-lint run ./..."
+
+[tasks.tidy]
+description = "Tidy module dependencies"
+run = "go mod tidy"
+
+[tasks."tidy:check"]
+description = "Check module dependencies without modifying files"
+run = "go mod tidy -diff"
+
+[tasks.check]
+description = "Run all non-mutating checks"
+depends = ["build", "fmt:check", "lint", "test", "tidy:check"]
+
+[tasks."hooks:install"]
+description = "Install repository-local Git hooks with mise integration"
+run = "hk install --mise"
