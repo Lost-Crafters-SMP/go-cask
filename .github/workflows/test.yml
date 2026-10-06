@@ -16,9 +16,41 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+      # GitHub's Windows runners put the workspace and RUNNER_TEMP on a fast
+      # local work disk (currently D:) while Go's default caches and TEMP/TMP
+      # live on the much slower C: OS disk. Measured on anvil (anvil-x4d, run
+      # 35916169079): fsync 5.9ms vs 313us, dir rename 1.5ms vs 161us, file
+      # create 424us vs 132us; warm test stage 13.2s vs 6.3s. Relocate before
+      # setup-go so its cache restore, the build, and t.TempDir()-heavy tests
+      # all use the work disk. Derives the drive from RUNNER_TEMP and no-ops
+      # when Go's defaults already share it (no hard-coded drive letters;
+      # approach from cloudposse/atmos#3049).
+      - name: Put Go caches and temp dirs on the runner work disk
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $work = Split-Path -Qualifier $env:RUNNER_TEMP
+          $local = Split-Path -Qualifier $env:LOCALAPPDATA
+          if ($work -eq $local) {
+            Write-Host "Go caches already on the work disk ($work); keeping Go's defaults"
+            exit 0
+          }
+          $go = Join-Path $env:RUNNER_TEMP 'go'
+          $tmp = Join-Path $env:RUNNER_TEMP 'tmp'
+          New-Item -ItemType Directory -Force -Path (Join-Path $go 'build'), (Join-Path $go 'pkg\mod'), $tmp | Out-Null
+          Add-Content $env:GITHUB_ENV "GOCACHE=$(Join-Path $go 'build')"
+          Add-Content $env:GITHUB_ENV "GOMODCACHE=$(Join-Path $go 'pkg\mod')"
+          # os.TempDir()/t.TempDir() resolve from TMP/TEMP on Windows
+          # (GetTempPath order); GOTMPDIR moves the go command's build scratch.
+          Add-Content $env:GITHUB_ENV "GOTMPDIR=$tmp"
+          Add-Content $env:GITHUB_ENV "TEMP=$tmp"
+          Add-Content $env:GITHUB_ENV "TMP=$tmp"
+          Write-Host "Relocated Go caches and temp dirs to the $work work disk"
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
         with:
