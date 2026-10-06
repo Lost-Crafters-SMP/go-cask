@@ -1,8 +1,8 @@
 # Repository context
 
-- This is a standalone content-addressable storage library module, `go.lostcrafters.com/cask`, not an application. The root package is `cask`; `doc.go` is currently its only Go source. There is no public API or test suite yet, so a passing test command does not imply behavioral coverage.
+- This is a standalone content-addressable storage library module, `go.lostcrafters.com/cask`, not an application. The root package is `cask`; the public API and integrity contract are defined in `docs/design.md`. Tests cover ingestion, verification, confinement, native publication, process concurrency, and crashes.
 - Keep library code at the module root; introduce subpackages only as needed (see `README.md`). `go.work` is ignored and is not part of the shared setup.
-- This is a scaffold only. Storage APIs, persistence formats, and implementation details have not been defined.
+- V1 is a concrete filesystem store with SHA-256/SHA-512 keys. Keep ingestion single-pass, verify existing objects on duplicate publication, and preserve atomic no-clobber semantics. Native publication code is private and build-tagged; no backend interfaces or application policy belong here.
 
 ## Tooling and verification
 
